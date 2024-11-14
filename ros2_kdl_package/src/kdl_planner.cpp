@@ -80,7 +80,7 @@ void KDLPlanner::compute_trapezoidal_velocity_point(double t, double tc,double &
   }
   else if(t <= trajDuration_-tc)
   {
-    s =0.5*maxAcc_*(t-tc/2);
+    s =maxAcc_*tc*(t-tc/2);
     sdot=maxAcc_*tc;
     sdotdot=0;  
   }
