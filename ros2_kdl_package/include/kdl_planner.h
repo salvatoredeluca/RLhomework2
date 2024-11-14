@@ -45,6 +45,7 @@ public:
     trajectory_point compute_trajectory(double time);
 
     void compute_trapezoidal_velocity_point(double t, double tc,double & s,double & sdot,double & sdotdot);
+    void cubic_polynomial(double t,double & s,double & sdot,double & sdotdot);
 
 private:
 
@@ -54,7 +55,7 @@ private:
 	KDL::Trajectory* traject_;
 
     //////////////////////////////////
-    double trajDuration_, accDuration_,maxAcc_;
+    double trajDuration_, accDuration_,maxAcc_,a0_,a1_,a2_,a3_;
     
     Eigen::Vector3d trajInit_, trajEnd_;
     trajectory_point p;

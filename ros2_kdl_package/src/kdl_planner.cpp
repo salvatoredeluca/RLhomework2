@@ -20,6 +20,12 @@ KDLPlanner::KDLPlanner(double _trajDuration, double _maxAcc)
 {
     trajDuration_ = _trajDuration;
     maxAcc_ = _maxAcc;
+
+    double a0_=0;
+    double a1_=0;//we want that sdot(0) is equal to 0
+    double a2_=3/std::pow(trajDuration_,2);
+    double a3_=-2/std::pow(trajDuration_,3);
+
    
 }
 
@@ -93,6 +99,18 @@ void KDLPlanner::compute_trapezoidal_velocity_point(double t, double tc,double &
 
   
 }
+
+void KDLPlanner::cubic_polynomial(double t,double & s,double & sdot,double & sdotdot)
+{
+  s=a3_*std::pow(t,3)+a2_*std::pow(t,2)+a1_*t+a0_;
+  sdot=3*a3_*std::pow(t,2)+2*a2_*t+a1_;
+  sdotdot=6*a3_*t+2*a2_;
+
+}
+
+
+
+
 
 trajectory_point KDLPlanner::compute_trajectory(double time)
 {
