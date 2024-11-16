@@ -8,25 +8,49 @@ KDLPlanner::KDLPlanner(){}
 //     velpref_ = new KDL::VelocityProfile_Trap(_maxVel,_maxAcc);
 // }
 
-KDLPlanner::KDLPlanner(double _trajDuration, double _accDuration, Eigen::Vector3d _trajInit, Eigen::Vector3d _trajEnd)
+KDLPlanner::KDLPlanner(double _trajDuration, Eigen::Vector3d _trajInit, Eigen::Vector3d _trajEnd)
 {
+   //aggiungi i coefficienti per determinare la cubica
     trajDuration_ = _trajDuration;
-    accDuration_ = _accDuration;
     trajInit_ = _trajInit;
     trajEnd_ = _trajEnd;
+
+    a0_=0;
+    a1_=0;
+    a2_=3/std::pow(trajDuration_,2);//We want that the velocity at the start 
+    a3_=-2/std::pow(trajDuration_,3);//and at the end is zero
 }
 
-KDLPlanner::KDLPlanner(double _trajDuration, double _maxAcc)
-{
-    trajDuration_ = _trajDuration;
-    maxAcc_ = _maxAcc;
+// KDLPlanner::KDLPlanner(double _trajDuration, double _maxAcc)
+// {
+//     //We want that the velocity at the start and at the end is zero
+//     trajDuration_ = _trajDuration;
+//     maxAcc_ = _maxAcc;
 
-    double a0_=0;
-    double a1_=0;//we want that sdot(0) is equal to 0
-    double a2_=3/std::pow(trajDuration_,2);
-    double a3_=-2/std::pow(trajDuration_,3);
+//     double a0_=0;
+//     double a1_=0;
+//     double a2_=3/std::pow(trajDuration_,2);
+//     double a3_=-2/std::pow(trajDuration_,3);
 
    
+// }
+
+KDLPlanner::KDLPlanner(double _trajDuration, Eigen::Vector3d _trajInit, double _trajRadius,KDL::Frame _EEInitFrame)
+{
+
+   
+    trajDuration_ = _trajDuration;
+   
+    trajRadius_=_trajRadius;
+    trajInit_=_trajInit;
+    EEInitFrame_=_EEInitFrame;
+
+    a0_=0;
+    a1_=0;
+    a2_=3/std::pow(trajDuration_,2);//We want that the velocity at the start 
+    a3_=-2/std::pow(trajDuration_,3);//and at the end is zero
+
+
 }
 
 
@@ -77,7 +101,7 @@ KDL::Trajectory* KDLPlanner::getTrajectory()
 
 void KDLPlanner::compute_trapezoidal_velocity_point(double t, double tc,double & s,double & sdot,double & sdotdot)
 {
-
+  double maxAcc_=1.0/(-(std::pow(tc,2))+trajDuration_*tc); //i have computed that from the graphic  
   if(t <= tc)
   {
     s= 0.5*maxAcc_*std::pow(t,2);
@@ -112,7 +136,7 @@ void KDLPlanner::cubic_polynomial(double t,double & s,double & sdot,double & sdo
 
 
 
-trajectory_point KDLPlanner::compute_trajectory(double time)
+trajectory_point KDLPlanner::compute_trajectory(double time,std::string traj_type )
 {
   /* trapezoidal velocity profile with accDuration_ acceleration time period and trajDuration_ total duration.
      time = current time
@@ -121,29 +145,106 @@ trajectory_point KDLPlanner::compute_trajectory(double time)
      trajInit_ = trajectory initial point
      trajEnd_  = trajectory final point */
 
-  trajectory_point traj;
+    double s=0;
+    double sdot=0;
+    double sdotdot=0;
 
-  Eigen::Vector3d ddot_traj_c = -1.0/(std::pow(accDuration_,2)-trajDuration_*accDuration_)*(trajEnd_-trajInit_);
-
-  if(time <= accDuration_)
+   trajectory_point traj;
+  if(traj_type=="linear_trajectory")
   {
-    traj.pos = trajInit_ + 0.5*ddot_traj_c*std::pow(time,2);
-    traj.vel = ddot_traj_c*time;
-    traj.acc = ddot_traj_c;
+
+      cubic_polynomial(time,s,sdot,sdotdot);
+      
+
+         
+        traj.pos = trajInit_ + s*(trajEnd_-trajInit_);
+        traj.vel = sdot*(trajEnd_-trajInit_);
+        traj.acc = sdotdot*(trajEnd_-trajInit_);
+
+        
   }
-  else if(time <= trajDuration_-accDuration_)
+  
+  else if (traj_type=="circular_trajectory")
   {
-    traj.pos = trajInit_ + ddot_traj_c*accDuration_*(time-accDuration_/2);
-    traj.vel = ddot_traj_c*accDuration_;
-    traj.acc = Eigen::Vector3d::Zero();
+      cubic_polynomial(time,s,sdot,sdotdot);
+      
+      traj.pos(0)=EEInitFrame_.p.x();
+      traj.pos(1)=EEInitFrame_.p.y()-trajRadius_*cos(2*M_PI*s);
+      traj.pos(2)=EEInitFrame_.p.z()-trajRadius_*sin(2*M_PI*s);
+
+      traj.vel(0)=0;
+      traj.vel(1)=2*M_PI*trajRadius_*sdot*sin(2*M_PI*s);
+      traj.vel(2)=-2*M_PI*trajRadius_*sdot*cos(2*M_PI*s);
+
+      traj.acc(0)=0;
+      traj.acc(1)=2*M_PI*trajRadius_*(sdotdot*sin(2*M_PI*s)+sdot*sdot*cos(2*M_PI*s)*2*M_PI);
+      traj.acc(2)=-2*M_PI*trajRadius_*(sdotdot*cos(2*M_PI*s)-2*M_PI*sdot*sdot*sin(2*M_PI*s));
+
+      for (unsigned int i=0;i<3;i++){std::cout<<"traiettoria"<<traj.pos(i)<<std::endl;}
+      std::cout<<"ascissa: "<<s<<std::endl;
+
   }
   else
   {
-    traj.pos = trajEnd_ - 0.5*ddot_traj_c*std::pow(trajDuration_-time,2);
-    traj.vel = ddot_traj_c*(trajDuration_-time);
-    traj.acc = -ddot_traj_c;
+     std::cout<<"ERRORE SCRITTURA STRINGA"<<std::endl;
   }
+ 
+  return traj;
 
+}
+
+trajectory_point KDLPlanner::compute_trajectoryTrapezoidal(double time, double tc, std::string traj_type )
+{
+  /* trapezoidal velocity profile with accDuration_ acceleration time period and trajDuration_ total duration.
+     time = current time
+     trajDuration_  = final time
+     accDuration_   = acceleration time
+     trajInit_ = trajectory initial point
+     trajEnd_  = trajectory final point */
+
+
+
+
+    double s=0;
+    double sdot=0;
+    double sdotdot=0;
+
+  trajectory_point traj;
+  if(traj_type=="linear_trajectory")
+  {
+      compute_trapezoidal_velocity_point(time,tc,s,sdot,sdotdot);
+      //Eigen::Vector3d ddot_traj_c = -1.0/(std::pow(accDuration_,2)-trajDuration_*accDuration_)*(trajEnd_-trajInit_);
+      
+        traj.pos = trajInit_ + s*(trajEnd_-trajInit_);
+        traj.vel = sdot*(trajEnd_-trajInit_);
+        traj.acc = sdotdot*(trajEnd_-trajInit_);
+        for (unsigned int i=0;i<3;i++){std::cout<<"traiettoria vel"<<traj.vel(i)<<std::endl;}
+      }
+  else if (traj_type=="circular_trajectory")
+  {
+      //cubic_polynomial(time,s,sdot,sdotdot);
+      compute_trapezoidal_velocity_point(time,tc,s,sdot,sdotdot);
+      traj.pos(0)=EEInitFrame_.p.x();
+      traj.pos(1)=EEInitFrame_.p.y()-trajRadius_*cos(2*M_PI*s);
+      traj.pos(2)=EEInitFrame_.p.z()-trajRadius_*sin(2*M_PI*s);
+
+      traj.vel(0)=0;
+      traj.vel(1)=2*M_PI*trajRadius_*sdot*sin(2*M_PI*s);
+      traj.vel(2)=-2*M_PI*trajRadius_*sdot*cos(2*M_PI*s);
+
+      traj.acc(0)=0;
+      traj.acc(1)=2*M_PI*trajRadius_*(sdotdot*sin(2*M_PI*s)+sdot*sdot*cos(2*M_PI*s)*2*M_PI);
+      traj.acc(2)=-2*M_PI*trajRadius_*(sdotdot*cos(2*M_PI*s)-2*M_PI*sdot*sdot*sin(2*M_PI*s));
+
+      //for (unsigned int i=0;i<3;i++){std::cout<<"traiettoria"<<traj.pos(i)<<std::endl;}
+      //std::cout<<"sdot: "<<sdot<<std::endl;
+
+  }
+  else
+  {
+     std::cout<<"ERRORE SCRITTURA STRINGA"<<std::endl;
+  }
+ 
   return traj;
 
 }

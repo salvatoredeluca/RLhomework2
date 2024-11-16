@@ -23,7 +23,7 @@ controller_manager:
 iiwa_arm_controller:
   ros__parameters:
     command_interfaces:
-      - torque 
+      - position 
     state_interfaces:
       - position
       - velocity

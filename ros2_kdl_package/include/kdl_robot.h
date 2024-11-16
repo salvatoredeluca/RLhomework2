@@ -57,10 +57,16 @@ public:
     KDL::Twist getEEBodyVelocity();
     KDL::Jacobian getEEJacobian();
     KDL::Jacobian getEEBodyJacobian();
-    Eigen::VectorXd getEEJacDotqDot();
+    Eigen::MatrixXd getEEJacDot();
 
     // inverse kinematics
-    void getInverseKinematics(KDL::Frame &f, KDL::JntArray &q);                           
+    void getInverseKinematics(KDL::Frame &f, KDL::JntArray &q);   
+
+    void getInverseKinematicsVel(KDL::Twist &twist,KDL::JntArray &qdot);
+
+    void getInverseKinematicsAcc(KDL::Twist &xe_dotdot,KDL::JntArray &qdotdot);
+
+
 
 private:
 
@@ -72,8 +78,12 @@ private:
     KDL::ChainJntToJacSolver* jacSol_;
     KDL::ChainFkSolverPos_recursive* fkSol_;
     KDL::ChainFkSolverVel_recursive* fkVelSol_;
+
+    
+
     KDL::ChainIkSolverVel_pinv* ikVelSol_;
     KDL::ChainIkSolverPos_NR_JL* ikSol_;
+   
  
     KDL::ChainJntToJacDotSolver* jntJacDotSol_;
     KDL::ChainIdSolver_RNE* idSolver_;

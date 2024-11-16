@@ -1,6 +1,11 @@
 #ifndef KDLPlanner_H
 #define KDLPlanner_H
 
+#include <stdio.h>
+#include <iostream>
+#include <rclcpp/rclcpp.hpp>
+#include <string>
+
 #include <kdl/frames_io.hpp>
 #include <kdl/frames.hpp>
 #include <kdl/trajectory.hpp>
@@ -27,7 +32,13 @@ class KDLPlanner
 public:
 
     KDLPlanner();
-    KDLPlanner(double _maxVel, double _maxAcc);
+    KDLPlanner(double _trajDuration, Eigen::Vector3d _trajInit, double _trajRadius,KDL::Frame _EEInitFrame);
+    KDLPlanner(double _trajDuration,
+               Eigen::Vector3d _trajInit, Eigen::Vector3d _trajEnd);
+
+
+
+
     void CreateTrajectoryFromFrames(std::vector<KDL::Frame> &_frames,
                                     double _radius, double _eqRadius);
     void createCircPath(KDL::Frame &_F_start,
@@ -40,13 +51,12 @@ public:
     KDL::Trajectory* getTrajectory();
 
     //////////////////////////////////
-    KDLPlanner(double _trajDuration, double _accDuration,
-               Eigen::Vector3d _trajInit, Eigen::Vector3d _trajEnd);
-    trajectory_point compute_trajectory(double time);
+
+    trajectory_point compute_trajectory(double time,std::string traj_type );
 
     void compute_trapezoidal_velocity_point(double t, double tc,double & s,double & sdot,double & sdotdot);
     void cubic_polynomial(double t,double & s,double & sdot,double & sdotdot);
-
+    trajectory_point compute_trajectoryTrapezoidal(double time, double tc, std::string traj_type );
 private:
 
     KDL::Path_RoundedComposite* path_;
@@ -55,10 +65,11 @@ private:
 	KDL::Trajectory* traject_;
 
     //////////////////////////////////
-    double trajDuration_, accDuration_,maxAcc_,a0_,a1_,a2_,a3_;
+    double trajDuration_, accDuration_,a0_,a1_,a2_,a3_, trajRadius_;
     
     Eigen::Vector3d trajInit_, trajEnd_;
     trajectory_point p;
+    KDL::Frame EEInitFrame_;//to retrieve the center of the circular path
 
 };
 

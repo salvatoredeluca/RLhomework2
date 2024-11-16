@@ -23,6 +23,9 @@ KDLRobot::KDLRobot(KDL::Tree &robot_tree)
     jntJacDotSol_ = new KDL::ChainJntToJacDotSolver(chain_);
     fkSol_ = new KDL::ChainFkSolverPos_recursive(chain_);
     fkVelSol_ = new KDL::ChainFkSolverVel_recursive(chain_);
+
+    
+
     idSolver_ = new KDL::ChainIdSolver_RNE(chain_,KDL::Vector(0,0,-9.81));
     jsim_.resize(n_);
     grav_.resize(n_);
@@ -32,12 +35,33 @@ KDLRobot::KDLRobot(KDL::Tree &robot_tree)
     // q_max_.data <<  2.96,2.09,2.96,2.09,2.96,2.09,2.96; //2*M_PI, 2*M_PI; // TODO: read from file          
   
     ikVelSol_ = new KDL::ChainIkSolverVel_pinv(chain_); //Inverse velocity solver 
+    
+
+
 }
 
 void KDLRobot::getInverseKinematics(KDL::Frame &f, KDL::JntArray &q){
     int ret = ikSol_->CartToJnt(jntArray_,f,q);
     if(ret != 0) {std::cout << ikSol_->strError(ret) << std::endl;};
 }
+
+void KDLRobot::getInverseKinematicsVel(KDL::Twist &twist,KDL::JntArray &qdot)
+{
+    int res=ikVelSol_->CartToJnt(jntArray_,twist,qdot);
+    if(res<0){std::cout<<"Errore velocità cinematico"<<std::endl;};
+
+}
+
+void KDLRobot::getInverseKinematicsAcc(KDL::Twist &xe_dotdot,KDL::JntArray &qdotdot)
+{
+    Eigen::VectorXd q=pseudoinverse(s_J_ee_.data)*(toEigen(xe_dotdot)-s_J_dot_ee_.data*jntVel_.data);
+
+    for(unsigned int i=0;i<n_;i++)
+    {
+        qdotdot(i)=q(i);
+    }
+}
+
 
 void KDLRobot::setJntLimits(KDL::JntArray &q_low, KDL::JntArray &q_high)
 {
@@ -214,10 +238,11 @@ KDL::Jacobian KDLRobot::getEEBodyJacobian()
     return b_J_ee_;
 }
 
-Eigen::VectorXd KDLRobot::getEEJacDotqDot()
+Eigen::MatrixXd KDLRobot::getEEJacDot()
 {
     return s_J_dot_ee_.data;
 }
+
 
 void KDLRobot::addEE(const KDL::Frame &_f_F_ee)
 {
@@ -246,6 +271,8 @@ std::string KDLRobot::strError(const int error) {
   case KDL::SolverI::E_OUT_OF_RANGE:            return "[ERROR] The requested index is out of range \n"; break;
   case KDL::SolverI::E_NOT_IMPLEMENTED:         return "[ERROR] The requested function is not yet implemented \n"; break;
   case KDL::SolverI::E_SVD_FAILED:              return "[ERROR] SVD failed \n"; break;
+
+
 
   default: return "UNKNOWN ERROR";
   }
