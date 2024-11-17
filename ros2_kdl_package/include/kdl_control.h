@@ -11,6 +11,9 @@ class KDLController
 public:
 
     KDLController(KDLRobot &_robot);
+    KDLController();
+
+    void setController(KDLRobot&_robot);
 
     Eigen::VectorXd idCntr(KDL::JntArray &_qd,
                            KDL::JntArray &_dqd,

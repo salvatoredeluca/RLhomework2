@@ -137,6 +137,8 @@ def generate_launch_description():
             description='Configuration file of robot initial positions for simulation.',
         )
     )
+
+   
     declared_arguments.append(
         DeclareLaunchArgument(
             'command_interface',

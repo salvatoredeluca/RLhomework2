@@ -1,5 +1,15 @@
 #include "kdl_control.h"
 
+KDLController::KDLController()
+{
+  robot_=nullptr;
+}
+
+void KDLController::setController(KDLRobot &_robot)
+{
+    robot_=&_robot;
+}
+
 KDLController::KDLController(KDLRobot &_robot)
 {
     robot_ = &_robot;

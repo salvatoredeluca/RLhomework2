@@ -47,6 +47,8 @@ void KDLRobot::getInverseKinematics(KDL::Frame &f, KDL::JntArray &q){
 
 void KDLRobot::getInverseKinematicsVel(KDL::Twist &twist,KDL::JntArray &qdot)
 {
+    //std::cout<<"twist"<<toEigen(twist);
+    //for (unsigned int i=0;i<3;i++){std::cout<<"qdot"<<qdot.data(i)<<std::endl;}
     int res=ikVelSol_->CartToJnt(jntArray_,twist,qdot);
     if(res<0){std::cout<<"Errore velocità cinematico"<<std::endl;};
 
@@ -55,6 +57,8 @@ void KDLRobot::getInverseKinematicsVel(KDL::Twist &twist,KDL::JntArray &qdot)
 void KDLRobot::getInverseKinematicsAcc(KDL::Twist &xe_dotdot,KDL::JntArray &qdotdot)
 {
     Eigen::VectorXd q=pseudoinverse(s_J_ee_.data)*(toEigen(xe_dotdot)-s_J_dot_ee_.data*jntVel_.data);
+
+    //std::cout<<"J DOT"<<s_J_dot_ee_.data<<std::endl;
 
     for(unsigned int i=0;i<n_;i++)
     {
