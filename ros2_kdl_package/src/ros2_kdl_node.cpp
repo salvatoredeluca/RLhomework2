@@ -68,10 +68,7 @@ class Iiwa_pub_sub : public rclcpp::Node
             robot_ = std::make_shared<KDLRobot>(robot_tree);  
 
             controller_=KDLController(*robot_);
-
-
-            
-            
+        
             // Create joint array
             unsigned int nj = robot_->getNrJnts();
             KDL::JntArray q_min(nj), q_max(nj);
@@ -80,6 +77,7 @@ class Iiwa_pub_sub : public rclcpp::Node
             robot_->setJntLimits(q_min,q_max);            
             joint_positions_.resize(nj); 
             joint_velocities_.resize(nj); 
+            joint_efforts_.resize(nj);
 
             des_joint_positions_.resize(nj);
             des_joint_velocities_.resize(nj);
@@ -118,7 +116,7 @@ class Iiwa_pub_sub : public rclcpp::Node
             Eigen::Vector3d init_position(Eigen::Vector3d(init_cart_pose_.p.data) - Eigen::Vector3d(0,0,0.1));
 
             // EE's trajectory end position (just opposite y)
-            Eigen::Vector3d end_position; end_position << init_position[0], -init_position[1], init_position[2];
+            Eigen::Vector3d end_position; end_position << -init_position[0], init_position[1], init_position[2];
 
             // Plan trajectory
             double traj_duration = 1.5, acc_duration = 0.5, t = 0.0;
@@ -128,9 +126,9 @@ class Iiwa_pub_sub : public rclcpp::Node
             //controller_=KDLController(robot_);
             // Retrieve the first trajectory point
             
-            //trajectory_point p = planner_.compute_trajectoryTrapezoidal(t_,acc_duration,"circular_trajectory");
+            trajectory_point p = planner_.compute_trajectoryTrapezoidal(t_,acc_duration,"circular_trajectory");
             //trajectory_point p = planner_.compute_trajectory(t_, "linear_trajectory");
-            trajectory_point p = planner_.compute_trajectoryTrapezoidal(t_,0.5,"linear_trajectory"); 
+            //trajectory_point p = planner_.compute_trajectoryTrapezoidal(t_,0.5,"linear_trajectory"); 
 
             // compute errors
             Eigen::Vector3d error = computeLinearError(p.pos, Eigen::Vector3d(init_cart_pose_.p.data));
@@ -175,12 +173,12 @@ class Iiwa_pub_sub : public rclcpp::Node
 
                 robot_->getInverseKinematicsAcc(xedotdot,des_joint_accelerations_);
 
-                torque_=controller_.KDLController::idCntr(des_joint_positions_, des_joint_velocities_,des_joint_accelerations_, 1,1);
-
+               // torque_=controller_.KDLController::idCntr(des_joint_positions_, des_joint_velocities_,des_joint_accelerations_, 30,20);
+                joint_efforts_.data=controller_.KDLController::idCntr(init_cart_pose_,xedot,xedotdot,10,10,10,10);
 
                 // Send joint velocity commands
                 for (long int i = 0; i < joint_velocities_.data.size(); ++i) {
-                   desired_commands_[i] = torque_(i);}
+                   desired_commands_[i] = joint_efforts_.data(i);}
 
             // Create msg and publish
             std_msgs::msg::Float64MultiArray cmd_msg;
@@ -220,8 +218,8 @@ class Iiwa_pub_sub : public rclcpp::Node
                 robot_->update(toStdVector(joint_positions_.data),toStdVector(joint_velocities_.data));
 
                 
-                //trajectory_point p = planner_.compute_trajectoryTrapezoidal(t_,0.5,"circular_trajectory"); 
-                trajectory_point p = planner_.compute_trajectoryTrapezoidal(t_,0.5,"linear_trajectory"); 
+                trajectory_point p = planner_.compute_trajectoryTrapezoidal(t_,0.5,"circular_trajectory"); 
+                //trajectory_point p = planner_.compute_trajectoryTrapezoidal(t_,0.5,"linear_trajectory"); 
                 //trajectory_point p = planner_.compute_trajectory(t_, "linear_trajectory");
                 // Compute EE frame
                 KDL::Frame cartpos = robot_->getEEFrame();           
@@ -264,8 +262,8 @@ class Iiwa_pub_sub : public rclcpp::Node
 
                     robot_->getInverseKinematicsAcc(xedotdot,des_joint_accelerations_);
 
-                    torque_=controller_.KDLController::idCntr(des_joint_positions_, des_joint_velocities_,des_joint_accelerations_, 10,100);
-
+                    //torque_=controller_.KDLController::idCntr(des_joint_positions_, des_joint_velocities_,des_joint_accelerations_, 30,20);
+                    joint_efforts_.data=controller_.KDLController::idCntr(desFrame,xedot,xedotdot,10,10,10,10);
                 }
 
                 // Update KDLrobot structure
@@ -287,9 +285,11 @@ class Iiwa_pub_sub : public rclcpp::Node
 
                 else if(cmd_interface_=="effort"){
 
+                    
 
                     for (long int i = 0; i < 7; ++i) {
-                        desired_commands_[i] = torque_(i);
+                        desired_commands_[i] = joint_efforts_.data[i];
+                        
                     }
 
                 }
@@ -325,9 +325,9 @@ class Iiwa_pub_sub : public rclcpp::Node
 
         void joint_state_subscriber(const sensor_msgs::msg::JointState& sensor_msg){
 
-            for (size_t i = 0; i < sensor_msg.effort.size(); ++i) {
-                RCLCPP_INFO(this->get_logger(), "Positions %zu: %f", i, sensor_msg.position[i]);                
-            }
+            //for (size_t i = 0; i < sensor_msg.effort.size(); ++i) {
+                //RCLCPP_INFO(this->get_logger(), "Positions %zu: %f", i, sensor_msg.position[i]);                
+            //}
             // std::cout<<"\n";
             // for (size_t i = 0; i < sensor_msg.effort.size(); ++i) {
             //     RCLCPP_INFO(this->get_logger(), "Velocities %zu: %f", i, sensor_msg.velocity[i]);
@@ -341,6 +341,8 @@ class Iiwa_pub_sub : public rclcpp::Node
             for (unsigned int i  = 0; i < sensor_msg.position.size(); i++){
                 joint_positions_.data[i] = sensor_msg.position[i];
                 joint_velocities_.data[i] = sensor_msg.velocity[i];
+                joint_efforts_.data[i]=sensor_msg.effort[i];
+            
             }
         }
 
@@ -351,9 +353,10 @@ class Iiwa_pub_sub : public rclcpp::Node
         rclcpp::Node::SharedPtr node_handle_;
 
         std::vector<double> desired_commands_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        Eigen::VectorXd torque_;
+        
         KDL::JntArray joint_positions_;
         KDL::JntArray joint_velocities_;
+        KDL::JntArray joint_efforts_;
 
         KDL::JntArray des_joint_positions_;
         KDL::JntArray des_joint_velocities_;

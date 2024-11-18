@@ -170,7 +170,7 @@ trajectory_point KDLPlanner::compute_trajectory(double time,std::string traj_typ
       
       traj.pos(0)=EEInitFrame_.p.x();
       traj.pos(1)=EEInitFrame_.p.y()-trajRadius_*cos(2*M_PI*s);
-      traj.pos(2)=EEInitFrame_.p.z()-trajRadius_*sin(2*M_PI*s);
+      traj.pos(2)=EEInitFrame_.p.z()+0.4-trajRadius_*sin(2*M_PI*s);
 
       traj.vel(0)=0;
       traj.vel(1)=2*M_PI*trajRadius_*sdot*sin(2*M_PI*s);
@@ -218,7 +218,7 @@ trajectory_point KDLPlanner::compute_trajectoryTrapezoidal(double time, double t
         traj.pos = trajInit_ + s*(trajEnd_-trajInit_);
         traj.vel = sdot*(trajEnd_-trajInit_);
         traj.acc = sdotdot*(trajEnd_-trajInit_);
-        for (unsigned int i=0;i<3;i++){std::cout<<"traiettoria vel"<<traj.vel(i)<<std::endl;}
+        //for (unsigned int i=0;i<3;i++){std::cout<<"traiettoria vel"<<traj.vel(i)<<std::endl;}
       }
   else if (traj_type=="circular_trajectory")
   {
