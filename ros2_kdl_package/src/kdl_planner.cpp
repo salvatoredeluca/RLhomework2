@@ -161,6 +161,8 @@ trajectory_point KDLPlanner::compute_trajectory(double time,std::string traj_typ
         traj.vel = sdot*(trajEnd_-trajInit_);
         traj.acc = sdotdot*(trajEnd_-trajInit_);
 
+        std::cout<<"ascissa: "<<s<<std::endl;
+
         
   }
   
@@ -169,8 +171,8 @@ trajectory_point KDLPlanner::compute_trajectory(double time,std::string traj_typ
       cubic_polynomial(time,s,sdot,sdotdot);
       
       traj.pos(0)=EEInitFrame_.p.x();
-      traj.pos(1)=EEInitFrame_.p.y()-trajRadius_*cos(2*M_PI*s);
-      traj.pos(2)=EEInitFrame_.p.z()+0.4-trajRadius_*sin(2*M_PI*s);
+      traj.pos(1)=EEInitFrame_.p.y()+trajRadius_-trajRadius_*cos(2*M_PI*s);
+      traj.pos(2)=EEInitFrame_.p.z()-trajRadius_*sin(2*M_PI*s);
 
       traj.vel(0)=0;
       traj.vel(1)=2*M_PI*trajRadius_*sdot*sin(2*M_PI*s);
@@ -225,7 +227,7 @@ trajectory_point KDLPlanner::compute_trajectoryTrapezoidal(double time, double t
       //cubic_polynomial(time,s,sdot,sdotdot);
       compute_trapezoidal_velocity_point(time,tc,s,sdot,sdotdot);
       traj.pos(0)=EEInitFrame_.p.x();
-      traj.pos(1)=EEInitFrame_.p.y()-trajRadius_*cos(2*M_PI*s);
+      traj.pos(1)=EEInitFrame_.p.y()+trajRadius_-trajRadius_*cos(2*M_PI*s);
       traj.pos(2)=EEInitFrame_.p.z()-trajRadius_*sin(2*M_PI*s);
 
       traj.vel(0)=0;

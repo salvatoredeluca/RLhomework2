@@ -31,7 +31,7 @@ Eigen::VectorXd KDLController::idCntr(KDL::JntArray &_qd,
     Eigen::VectorXd ddqd = _ddqd.data;
     
     return robot_->getJsim() * (ddqd + _Kd*de + _Kp*e)
-            + robot_->getCoriolis() + robot_->getGravity() /*friction compensation?*/;
+            + robot_->getCoriolis(); //+ robot_->getGravity() /*friction compensation?*/;
 }
 
 Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
@@ -44,9 +44,9 @@ Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
     Eigen::Matrix<double,6,1> xtildedot;
 
     computeErrors(_desPos,robot_->getEEFrame(),_desVel,robot_->getEEVelocity(),xtilde,xtildedot);
-    //we resorted to geometric jacobian since the orientation was not taken into account for the homework 
+   
     Eigen::VectorXd y=pseudoinverse(robot_->getEEJacobian().data)*(toEigen(_desAcc)+_Kdp*xtildedot+_Kpp*xtilde-robot_->getEEJacDot()*robot_->getJntVelocities());
     
-    return  robot_->getJsim()*y + robot_->getCoriolis() + robot_->getGravity();
+    return  robot_->getJsim()*y + robot_->getCoriolis(); //+ robot_->getGravity();
 }
 

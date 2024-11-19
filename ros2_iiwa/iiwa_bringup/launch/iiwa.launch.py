@@ -297,12 +297,15 @@ def generate_launch_description():
     )
     iiwa_simulation_world = PathJoinSubstitution(
         [FindPackageShare(description_package),
-            'gazebo/worlds', 'empty.world']
+            'gazebo/worlds', 'world_demo.sdf']
     )
 
-
-    declared_arguments.append(DeclareLaunchArgument('gz_args', default_value='-r -v 1 empty.sdf',
-                              description='Arguments for gz_sim'),)    
+    # declared_arguments.append(DeclareLaunchArgument('gz_args', default_value='-r -v 1 empty.sdf',
+    #                           description='Arguments for gz_sim'),) 
+     
+    declared_arguments.append(DeclareLaunchArgument('gz_args', default_value=iiwa_simulation_world,
+                               description='Arguments for gz_sim'),) 
+         
 
     gazebo = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(

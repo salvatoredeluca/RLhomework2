@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+    <world name="world_demo">
+
+    <!-- Included model -->
+        <include>
+            <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
+        </include>
+        
+        <plugin name='gz::sim::systems::Physics' filename='ignition-gazebo-physics-system'/>
+        <plugin name='gz::sim::systems::UserCommands' filename='ignition-gazebo-user-commands-system'/>
+        <plugin name='gz::sim::systems::SceneBroadcaster' filename='ignition-gazebo-scene-broadcaster-system'/>
+        <plugin name='gz::sim::systems::Contact' filename='ignition-gazebo-contact-system'/>
+            
+        <gravity>0 0 0</gravity>
+        <light name="sun" type="directional">
+            <pose>0 0 10 0 0 0</pose>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.0 0.0 0.0 1</specular>
+            <attenuation>
+                <range>100</range>
+                <constant>1</constant>
+                <linear>0</linear>
+                <quadratic>0</quadratic>
+            </attenuation>
+            <direction>-1 -1 -1</direction>
+        </light>
+
+        
+    </world>
+</sdf>
+
