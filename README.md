@@ -35,5 +35,10 @@ In another terminal run
 ros2 run ros2_kdl_package ros2_kdl_node --ros-args -p cmd_interface:=effort
 ```
 
+## Video
+
+You should see something like this for the circular trajectory [here](media/circolare_trapezoidal.webm).
+
+And something like this for the linear one [here](media/linear_cubic.webm).
 
 
