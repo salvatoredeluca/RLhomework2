@@ -37,6 +37,5 @@ ros2 run ros2_kdl_package ros2_kdl_node --ros-args -p cmd_interface:=effort
 
 ## Video
 
-media/linear_cubic.mov
-
+https://github.com/salvatoredeluca/RLhomework2/blob/main/media/linear_cubic.mov
 
