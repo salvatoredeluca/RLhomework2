@@ -277,6 +277,25 @@ def generate_launch_description():
         namespace=namespace,
         condition=UnlessCondition(use_sim)
     )
+
+
+    iiwa_arm_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['iiwa_arm_controller','--controller-manager',[namespace, 'controller_manager']],
+        parameters=[{'command_interface': 'position'}],
+    )
+
+    effort_controller_spawner=Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=['effort_controller','--controller-manager',[namespace, 'controller_manager']],
+        parameters=[{'command_interface': 'effort'}],
+    )
+
+   
+
+
     robot_state_pub_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -387,12 +406,32 @@ def generate_launch_description():
         )
     )
 
+    delay_iiwa_arm_controller_spawner_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[iiwa_arm_controller_spawner],
+        )
+    )
+
+    delay_effort_controller_spawner_after_iiwa_arm_controller_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[effort_controller_spawner],
+        )
+    )
+
+
+
     nodes = [
         gazebo,
         control_node,
         iiwa_planning_launch,
         iiwa_servoing_launch,
         spawn_entity,
+
+        #delay_iiwa_arm_controller_spawner_after_joint_state_broadcaster_spawner,
+       # delay_effort_controller_spawner_after_iiwa_arm_controller_spawner,
+
         robot_state_pub_node,
         delay_joint_state_broadcaster_spawner_after_control_node,
         delay_joint_state_broadcaster_spawner_after_spawn_entity,

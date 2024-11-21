@@ -40,13 +40,36 @@ Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
                                       double _Kpp, double _Kpo,
                                       double _Kdp, double _Kdo)
 {
-    Eigen::Matrix<double,6,1> xtilde;
-    Eigen::Matrix<double,6,1> xtildedot;
+    Vector6d xtilde;
+    Vector6d xtildedot;
 
+    Eigen::Matrix<double,6,6> Kp;
+    Eigen::Matrix<double,6,6> Kd;
+
+    Kp.block(0,0,3,3) = _Kpp*Eigen::Matrix3d::Identity();
+    Kp.block(3,3,3,3) = _Kpo*Eigen::Matrix3d::Identity();
+    Kd.block(0,0,3,3) = _Kdp*Eigen::Matrix3d::Identity();
+    Kd.block(3,3,3,3) = _Kdo*Eigen::Matrix3d::Identity();
+    
     computeErrors(_desPos,robot_->getEEFrame(),_desVel,robot_->getEEVelocity(),xtilde,xtildedot);
-   
-    Eigen::VectorXd y=pseudoinverse(robot_->getEEJacobian().data)*(toEigen(_desAcc)+_Kdp*xtildedot+_Kpp*xtilde-robot_->getEEJacDot()*robot_->getJntVelocities());
+
+    for (unsigned int i=0;i<3;i++){xtilde(i)=_Kpp*xtilde(i);xtildedot(i)=_Kdp*xtildedot(i);}
+    for (unsigned int i=3;i<6;i++){xtilde(i)=_Kpo*xtilde(i);xtildedot(i)=_Kdo*xtildedot(i);}
+    
+    Eigen::Matrix<double,7,1> y;
+    y<<pseudoinverse(robot_->getEEJacobian().data)*(toEigen(_desAcc)+xtilde+xtildedot-robot_->getEEJacDot()*robot_->getJntVelocities());
     
     return  robot_->getJsim()*y + robot_->getCoriolis(); //+ robot_->getGravity();
+}
+
+Eigen::VectorXd KDLController::PDplusGravity(KDL::JntArray &_qd,double _Kp,double _Kd)
+{
+    Eigen::VectorXd e(7);
+    
+    for(unsigned int i=0;i<robot_->getNrJnts();i++)
+    {
+        e(i)=_qd.data[i]-robot_->getJntValues()[i];
+    }
+    return _Kp*e-_Kd*robot_->getJntVelocities();//+robot->getGravity();
 }
 

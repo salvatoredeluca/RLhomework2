@@ -29,6 +29,8 @@ public:
                            double _Kdp,
                            double _Kdo);
 
+    Eigen::VectorXd PDplusGravity(KDL::JntArray &_qd,double _Kp,double _Kd);
+
 private:
 
     KDLRobot* robot_;

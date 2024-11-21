@@ -28,6 +28,8 @@
             </xacro:unless>
 
             <joint name="${prefix}joint_a1">
+             
+              
                 <command_interface name="${command_interface}" />
                     <xacro:if value="${command_interface == 'position'}">
                         <param name="min">-2.96</param>
@@ -44,6 +46,8 @@
                 </state_interface>
             </joint>
             <joint name="${prefix}joint_a2">
+              
+               
                 <command_interface name="${command_interface}" />
                     <xacro:if value="${command_interface == 'position'}">
                         <param name="min">-2.09</param>
@@ -60,6 +64,8 @@
                 </state_interface>
             </joint>
             <joint name="${prefix}joint_a3">
+               
+                
                 <command_interface name="${command_interface}" />
                     <xacro:if value="${command_interface == 'position'}">
                         <param name="min">-2.96</param>
@@ -76,6 +82,8 @@
                 </state_interface>
             </joint>
             <joint name="${prefix}joint_a4">
+             
+             
                 <command_interface name="${command_interface}" />
                     <xacro:if value="${command_interface == 'position'}">
                         <param name="min">-2.09</param>
@@ -92,6 +100,8 @@
                 </state_interface>
             </joint>
             <joint name="${prefix}joint_a5">
+              
+              
                 <command_interface name="${command_interface}" />
                     <xacro:if value="${command_interface == 'position'}">
                         <param name="min">-2.96</param>
@@ -108,6 +118,8 @@
                 </state_interface>
             </joint>
             <joint name="${prefix}joint_a6">
+             
+               
                 <command_interface name="${command_interface}" />
                     <xacro:if value="${command_interface == 'position'}">
                         <param name="min">-2.09</param>
@@ -124,6 +136,8 @@
                 </state_interface>
             </joint>
             <joint name="${prefix}joint_a7">
+                
+             
                 <command_interface name="${command_interface}" />
                     <xacro:if value="${command_interface == 'position'}">
                         <param name="min">-3.05</param>

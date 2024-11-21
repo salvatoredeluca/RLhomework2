@@ -79,6 +79,7 @@ class Iiwa_pub_sub : public rclcpp::Node
             joint_velocities_.resize(nj); 
             joint_efforts_.resize(nj);
 
+
             des_joint_positions_.resize(nj);
             des_joint_velocities_.resize(nj);
             des_joint_accelerations_.resize(nj);
@@ -209,7 +210,7 @@ class Iiwa_pub_sub : public rclcpp::Node
             int trajectory_len = 150; // 
             int loop_rate = trajectory_len / total_time;
             double dt = 1.0 / loop_rate;
-            t_+=dt;
+            t_+=dt/2;
 
             if (t_ < total_time){
 
@@ -237,8 +238,10 @@ class Iiwa_pub_sub : public rclcpp::Node
                     KDL::Frame nextFrame; nextFrame.M = cartpos.M; nextFrame.p = cartpos.p + (toKDL(p.vel) + toKDL(1*error))*dt; 
 
                     // Compute IK
-                    robot_->getInverseKinematics(nextFrame, joint_positions_);
+                    robot_->getInverseKinematics(nextFrame, des_joint_positions_);
 
+                    
+                    
                     
                 }
                 else if (cmd_interface_=="velocity"){
@@ -272,10 +275,13 @@ class Iiwa_pub_sub : public rclcpp::Node
                 if(cmd_interface_ == "position"){
                     // Send joint position commands
                     for (long int i = 0; i < joint_positions_.data.size(); ++i) {
-                        desired_commands_[i] = joint_positions_(i);
+                        desired_commands_[i] = des_joint_positions_.data[i];
+                    
                     }
+
+                    
                 }
-                else if(cmd_interface_=="velocity"){
+                 else if(cmd_interface_=="velocity"){
                     // Send joint velocity commands
                     for (long int i = 0; i < joint_velocities_.data.size(); ++i) {
                         desired_commands_[i] = joint_velocities_(i);
@@ -285,11 +291,8 @@ class Iiwa_pub_sub : public rclcpp::Node
 
                 else if(cmd_interface_=="effort"){
 
-                    
-
                     for (long int i = 0; i < 7; ++i) {
-                        desired_commands_[i] = joint_efforts_.data[i];
-                        
+                        desired_commands_[i] = joint_efforts_.data[i];                        
                     }
 
                 }
@@ -308,19 +311,48 @@ class Iiwa_pub_sub : public rclcpp::Node
                 // std::cout << "/////////////////////////////////////////////////" <<std::endl <<std::endl;
             }
             else{
+                
                 RCLCPP_INFO_ONCE(this->get_logger(), "Trajectory executed successfully ...");
                 //Send joint velocity commands
-
                
-                for (long int i = 0; i < joint_velocities_.data.size(); ++i) {
-                   desired_commands_[i] = 0;
-                }
-                
-                // Create msg and publish
-                std_msgs::msg::Float64MultiArray cmd_msg;
-                cmd_msg.data = desired_commands_;
-                cmdPublisher_->publish(cmd_msg);
-            }
+               
+                if(cmd_interface_ =="effort")
+                {   
+                        des_joint_velocities_.data=Eigen::VectorXd::Zero(7,1);
+                        des_joint_accelerations_.data=Eigen::VectorXd::Zero(7,1);
+                        
+                        KDL::Frame f = robot_->getEEFrame();
+                        
+                        KDL::Twist xedot(KDL::Vector::Zero(),KDL::Vector::Zero());;
+                        
+                        KDL::Twist xedotdot(KDL::Vector::Zero(),KDL::Vector::Zero());
+                        
+                                    
+                        //joint_efforts_.data=controller_.KDLController::idCntr(joint_positions_,des_joint_velocities_, des_joint_accelerations_, 230,17); 
+                        joint_efforts_.data=controller_.KDLController::idCntr(f,xedot, xedotdot, 230,230,17,17);                
+                                
+                        //joint_efforts_.data=controller_.KDLController::PDplusGravity(joint_positions_,200,10);
+
+                        robot_->update(toStdVector(joint_positions_.data),toStdVector(joint_velocities_.data));
+
+                        
+
+                        for (long int i = 0; i < joint_velocities_.data.size(); ++i) {
+                            desired_commands_[i] = joint_efforts_.data[i];
+                                            
+                        
+                    }
+                    
+                }       
+                    
+                    // Create msg and publish
+                    std_msgs::msg::Float64MultiArray cmd_msg;
+                    cmd_msg.data = desired_commands_;
+                    cmdPublisher_->publish(cmd_msg);
+
+                    
+               }
+            
         }
 
         void joint_state_subscriber(const sensor_msgs::msg::JointState& sensor_msg){
@@ -362,9 +394,12 @@ class Iiwa_pub_sub : public rclcpp::Node
         KDL::JntArray des_joint_velocities_;
         KDL::JntArray des_joint_accelerations_;
 
+
         std::shared_ptr<KDLRobot> robot_;
         KDLPlanner planner_;
         KDLController controller_;
+        
+
         
 
         int iteration_;
