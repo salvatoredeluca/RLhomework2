@@ -35,9 +35,12 @@ In another terminal run
 ros2 run ros2_kdl_package ros2_kdl_node --ros-args -p cmd_interface:=effort
 ```
 
-## Video
+## 🎥 Video
 
+You should see something like this for the circular trajectory 
 ![](https://github.com/salvatoredeluca/RLhomework2/blob/main/media/circolare_trapezoidal.gif)
+
+And something like this for the linear one
 
 ![](https://github.com/salvatoredeluca/RLhomework2/blob/main/media/linear_cubic.gif)
 
