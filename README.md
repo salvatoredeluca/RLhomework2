@@ -37,11 +37,6 @@ ros2 run ros2_kdl_package ros2_kdl_node --ros-args -p cmd_interface:=effort
 
 ## Video
 
-<video controls width="640" height="360">
-  <source src="(media/circolare_trapezoidal.webm" type="video/webm"  
-</video>
-
-
-And something like this for the linear one [here](media/linear_cubic.webm).
+media/linear_cubic.mov
 
 
