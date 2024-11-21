@@ -12,7 +12,7 @@
         <plugin name='gz::sim::systems::SceneBroadcaster' filename='ignition-gazebo-scene-broadcaster-system'/>
         <plugin name='gz::sim::systems::Contact' filename='ignition-gazebo-contact-system'/>
             
-        <gravity>0 0 0</gravity>
+        <gravity>0 0 -9.8</gravity>
         <light name="sun" type="directional">
             <pose>0 0 10 0 0 0</pose>
             <diffuse>0.8 0.8 0.8 1</diffuse>

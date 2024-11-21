@@ -147,7 +147,7 @@ trajectory_point KDLPlanner::compute_trajectory(double time,std::string traj_typ
         traj.pos = trajInit_ + s*(trajEnd_-trajInit_);
         traj.vel = sdot*(trajEnd_-trajInit_);
         traj.acc = sdotdot*(trajEnd_-trajInit_);
-        //std::cout<<"ascissa: "<<s<<std::endl;       
+        std::cout<<"ascissa: "<<s<<std::endl;       
   } 
   else if (traj_type=="circular_trajectory")
   {
@@ -165,7 +165,7 @@ trajectory_point KDLPlanner::compute_trajectory(double time,std::string traj_typ
       traj.acc(2)=-2*M_PI*trajRadius_*(sdotdot*cos(2*M_PI*s)-2*M_PI*sdot*sdot*sin(2*M_PI*s));
 
       //for (unsigned int i=0;i<3;i++){std::cout<<"traiettoria"<<traj.pos(i)<<std::endl;}
-      //std::cout<<"ascissa: "<<s<<std::endl;
+      std::cout<<"ascissa: "<<s<<std::endl;
   }
   else
   {

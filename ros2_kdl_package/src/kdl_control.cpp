@@ -31,7 +31,7 @@ Eigen::VectorXd KDLController::idCntr(KDL::JntArray &_qd,
     Eigen::VectorXd ddqd = _ddqd.data;
     
     return robot_->getJsim() * (ddqd + _Kd*de + _Kp*e)
-            + robot_->getCoriolis(); //+ robot_->getGravity() /*friction compensation?*/;
+            + robot_->getCoriolis()+ robot_->getGravity() /*friction compensation?*/;
 }
 
 Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
@@ -59,7 +59,7 @@ Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
     Eigen::Matrix<double,7,1> y;
     y<<pseudoinverse(robot_->getEEJacobian().data)*(toEigen(_desAcc)+xtilde+xtildedot-robot_->getEEJacDot()*robot_->getJntVelocities());
     
-    return  robot_->getJsim()*y + robot_->getCoriolis(); //+ robot_->getGravity();
+    return  robot_->getJsim()*y + robot_->getCoriolis() + robot_->getGravity();
 }
 
 Eigen::VectorXd KDLController::PDplusGravity(KDL::JntArray &_qd,double _Kp,double _Kd)
@@ -70,6 +70,6 @@ Eigen::VectorXd KDLController::PDplusGravity(KDL::JntArray &_qd,double _Kp,doubl
     {
         e(i)=_qd.data[i]-robot_->getJntValues()[i];
     }
-    return _Kp*e-_Kd*robot_->getJntVelocities();//+robot->getGravity();
+    return _Kp*e-_Kd*robot_->getJntVelocities()+robot_->getGravity();
 }
 

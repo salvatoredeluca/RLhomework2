@@ -66,6 +66,9 @@ public:
 
     void getInverseKinematicsAcc(KDL::Twist &xe_dotdot,KDL::JntArray &qdotdot);
 
+    void getFwdKinematicsPos(KDL::JntArray & q,KDL::Frame& p);
+
+
 
 
 private:

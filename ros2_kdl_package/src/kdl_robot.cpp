@@ -54,6 +54,14 @@ void KDLRobot::getInverseKinematicsVel(KDL::Twist &twist,KDL::JntArray &qdot)
 
 }
 
+void KDLRobot::getFwdKinematicsPos(KDL::JntArray & q,KDL::Frame& p)
+{
+    int res=fkSol_->JntToCart(q,p);
+    if(res<0){std::cout<<"Errore cinematica diretta"<<std::endl;};
+}
+
+
+
 void KDLRobot::getInverseKinematicsAcc(KDL::Twist &xe_dotdot,KDL::JntArray &qdotdot)
 {
     Eigen::VectorXd q=pseudoinverse(s_J_ee_.data)*(toEigen(xe_dotdot)-s_J_dot_ee_.data*jntVel_.data);
